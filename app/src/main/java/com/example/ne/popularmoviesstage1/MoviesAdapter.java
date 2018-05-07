@@ -69,6 +69,11 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieGridViewHold
     public void updateDataList(List<MovieData> newList) {
         if (newList != null) {
             this.dataList = newList;
+            // Can't believe I missed this at first -- this allows
+            //  the adapter to notify the RecyclerView that the
+            //  underlying data set may have changed, and to
+            //  re-read the appropriate data if needed
+            this.notifyDataSetChanged();
         }
     }
 

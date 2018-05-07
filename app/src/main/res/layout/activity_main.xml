@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- I'm honestly not sure which would be better here: LinearLayout or
-    FrameLayout. I'm going with FrameLayout, simply because that was the
-    one we used in the RecyclerView implementations in Lesson 3 of DAA. -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<!-- This is the RecyclerView for which I'll be building
+        an adapter and layout -->
+
+<!-- Side note, I had no idea you could implement views
+        without containing them inside of a Layout.
+        I wonder what implications this has, if it would
+        be more difficult to build this into a Layout later
+        or not. Also, how are we able to define the android
+        namespace in the RecyclerView without an error?
+        Also, what is the RecyclerView's "parent" if it's
+        not inside a Layout? So many questions about this
+        change, but I'm glad my mentor pointed it out. -->
+<android.support.v7.widget.RecyclerView android:id="@+id/rv_movies_grid"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.ne.popularmoviesstage1.MainActivity">
-
-    <!-- This is the RecyclerView for which I'll be building
-        an adapter and layout -->
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rv_movies_grid"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-</FrameLayout>
+    xmlns:android="http://schemas.android.com/apk/res/android" />
