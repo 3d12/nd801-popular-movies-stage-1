@@ -2,11 +2,14 @@ package com.example.ne.popularmoviesstage1;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -22,9 +25,13 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieGridViewHold
     // Capture the calling context from instantiation
     private Context mContext = null;
 
-    // Adding a constructor that instantiates with a context
-    public MoviesAdapter(Context context) {
+    // Capture the OnClickListener from instantiation
+    private RecyclerView.OnClickListener mOnClickListener = null;
+
+    // Adding a constructor that instantiates with a context and clickListener
+    public MoviesAdapter(Context context, RecyclerView.OnClickListener clickListener) {
         this.mContext = context;
+        this.mOnClickListener = clickListener;
     }
 
     // Creating a custom ViewHolder here -- really no different than using
@@ -38,16 +45,16 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieGridViewHold
         return new MovieGridViewHolder(layoutInflater.inflate(R.layout.movie_list_item, parent, false)) {};
     }
 
-    // First implementation will be to successfully retrieve the title
-    //  as a string from the MovieData object and use that to populate
-    //  the title section of the inflated view... Once I have the
-    //  adapter working, I can work on using Picasso to populate
-    //  the image, per the guidance provided for this project
+    // Successfully implemented Picasso to load images, as well
+    //  as retrieving the title from the MovieData object
     @Override
     public void onBindViewHolder(MovieGridViewHolder holder, int position) {
         if (this.dataList != null) {
             holder.mMovieTitle.setText(this.dataList.get(position).mTitle);
-            holder.mMoviePoster.setImageResource(R.drawable.ic_launcher_foreground);
+
+            // Implementing Picasso to load the image from the MovieData object,
+            //  per project specs
+            Picasso.with(mContext).load(this.dataList.get(position).mImageLink).into(holder.mMoviePoster);
         }
     }
 
@@ -88,9 +95,14 @@ class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieGridViewHold
 
         // Constructor which, just like the parent constructor,
         //  accepts a View object, but also stores our references
-        //  to the View components
+        //  to the View components and set the OnClickListener
+        //  on the inflated view to the listener that was passed
+        //  to the adapter's constructor
         MovieGridViewHolder(View v) {
             super(v);
+            if (mOnClickListener != null) {
+                v.setOnClickListener(mOnClickListener);
+            }
             this.mMovieTitle = v.findViewById(R.id.tv_movie_grid_title);
             this.mMoviePoster = v.findViewById(R.id.iv_movie_grid_poster);
         }
