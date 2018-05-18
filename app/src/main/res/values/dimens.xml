@@ -3,4 +3,9 @@
     <dimen name="RecyclerViewSpacing">8dp</dimen>
     <dimen name="MoviePosterWidth">200dp</dimen>
     <dimen name="MoviePosterHeight">200dp</dimen>
+    <dimen name="MovieTextLarge">32sp</dimen>
+    <dimen name="MovieTextMedium">16sp</dimen>
+    <dimen name="MovieTextSmall">8sp</dimen>
+    <dimen name="MovieSpacing">16dp</dimen>
+    <dimen name="MovieSpacingSmall">8dp</dimen>
 </resources>

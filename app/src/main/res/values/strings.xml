@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Popular Movies Stage 1</string>
     <string name="movie_list_item_poster_description">Movie Poster</string>
+    <string name="movie_title_default_text">Default Title</string>
+    <string name="movie_detail_synopsis_label">Synopsis:</string>
+    <string name="movie_detail_release_date_label">Release Date:</string>
+    <string name="movie_detail_rating_label">Rating:</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.ne.popularmoviesstage1;
 
+import android.content.Intent;
 import android.graphics.Rect;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,6 +17,10 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
     // Activity-wide reference to the RecyclerView
     RecyclerView mMoviesRecyclerView;
 
+    // Activity-wide reference to the adapter for
+    //  the RecyclerView
+    MoviesAdapter mMoviesAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,16 +30,16 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         mMoviesRecyclerView = this.findViewById(R.id.rv_movies_grid);
 
         // Instantiate new custom adapter
-        MoviesAdapter moviesAdapter = new MoviesAdapter(this, this);
+        mMoviesAdapter = new MoviesAdapter(this, this);
 
         // Create some dummy data for testing custom adapter
         List<MovieData> testData = createDummyData();
 
         // Provide new adapter with data
-        moviesAdapter.updateDataList(testData);
+        mMoviesAdapter.updateDataList(testData);
 
         // Set adapter on RecyclerView
-        mMoviesRecyclerView.setAdapter(moviesAdapter);
+        mMoviesRecyclerView.setAdapter(mMoviesAdapter);
 
         // Get a grid layout manager
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, 3);
@@ -92,12 +97,25 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
     //  back to MainActivity. So best to do it all here, I think.
     @Override
     public void onClick(View v) {
+        // Find the index of the view that was clicked, which is passed here
         int clickedPosition = mMoviesRecyclerView.getChildAdapterPosition(v);
-        if (clickedPosition == 0) {
-            Toast.makeText(this, "Hotdog", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Not Hotdog", Toast.LENGTH_SHORT).show();
-        }
+
+        // Get the MovieData from the List field of the stored reference to
+        //  the instantiated adapter
+        MovieData clickedMovieData = mMoviesAdapter.dataList.get(clickedPosition);
+
+        // Create a new bundle to store the Parcelable object
+        Bundle bundleToPass = new Bundle();
+        bundleToPass.putParcelable("MovieData", clickedMovieData);
+
+        // Create a new intent for the DetailActivity class and load it with
+        //  the bundle we just created, which should (at this point) contain
+        //  a Parcel consisting of the MovieData fields
+        Intent intentToStart = new Intent(this, DetailActivity.class);
+        intentToStart.putExtra("MOVIE_DETAIL", bundleToPass);
+
+        // Kick it!
+        startActivity(intentToStart);
     }
 
     // Found on stack overflow, this is a way to apply a decoration to the recyclerview

@@ -18,9 +18,9 @@ import java.util.List;
  */
 
 class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieGridViewHolder> {
-    // Class-wide reference to the List object that will contain
+    // Package-wide reference to the List object that will contain
     //  the data
-    private List<MovieData> dataList = null;
+    List<MovieData> dataList = null;
 
     // Capture the calling context from instantiation
     private Context mContext = null;
