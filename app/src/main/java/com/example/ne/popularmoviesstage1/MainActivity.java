@@ -58,9 +58,9 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         // Set the layout on the RecyclerView
         mMoviesRecyclerView.setLayoutManager(layoutManager);
 
-        // Testing the implementation of fetching the API key
-        //  from a file
-        Log.d("MainActivity", "API key from resource file is: " + MovieDbHelper.getApiKey(this));
+        // Testing for appropriate implementation of MovieDbHelper to return API data
+        MovieDbHelper movieDbHelper = new MovieDbHelper(this);
+        Log.d("MainActivity", "Return from API is: " + movieDbHelper.fetchApiData(MovieDbHelper.ENDPOINT_POPULAR));
     }
 
     // Whipped up a quick method to populate a List<MovieData>
