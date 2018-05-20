@@ -1,7 +1,12 @@
 package com.example.ne.popularmoviesstage1;
 
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
 import android.graphics.Rect;
+import android.icu.text.LocaleDisplayNames;
+import android.os.AsyncTask;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -16,7 +21,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements RecyclerView.OnClickListener {
+public class MainActivity extends AppCompatActivity implements RecyclerView.OnClickListener,LoaderManager.LoaderCallbacks<String> {
+
+    // Stuff that's required for the ASyncTaskLoader
+    private static final int LOADER_TASK_ID = 12;
+    private static final String LOADER_BUNDLE_KEY = "queryType";
+    private String mApiStringData;
+    private boolean mWaitingForData = true;
+
+    // Activity-wide reference to the MovieDbHelper that will be fetching the data
+    MovieDbHelper mMovieDbHelper;
 
     // Activity-wide reference to the RecyclerView
     RecyclerView mMoviesRecyclerView;
@@ -59,8 +73,13 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         mMoviesRecyclerView.setLayoutManager(layoutManager);
 
         // Testing for appropriate implementation of MovieDbHelper to return API data
-        MovieDbHelper movieDbHelper = new MovieDbHelper(this);
-        Log.d("MainActivity", "Return from API is: " + movieDbHelper.fetchApiData(MovieDbHelper.ENDPOINT_POPULAR));
+        mMovieDbHelper = new MovieDbHelper(this);
+
+        LoaderManager loaderManager = getLoaderManager();
+        Bundle newBundle = new Bundle();
+        newBundle.putString(MainActivity.LOADER_BUNDLE_KEY, MovieDbHelper.ENDPOINT_POPULAR);
+        loaderManager.initLoader(MainActivity.LOADER_TASK_ID, newBundle, this);
+
     }
 
     // Whipped up a quick method to populate a List<MovieData>
@@ -124,6 +143,54 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
 
         // Kick it!
         startActivity(intentToStart);
+    }
+
+    @Override
+    public Loader<String> onCreateLoader(int id, final Bundle args) {
+        Log.d("MainActivity", "onCreateLoader was called!");
+        if (id == MainActivity.LOADER_TASK_ID && args.containsKey(MainActivity.LOADER_BUNDLE_KEY)) {
+            Log.d("onCreateLoader", "Success! " + String.valueOf(id) + " - " + args.containsKey(MainActivity.LOADER_BUNDLE_KEY));
+            return new android.content.AsyncTaskLoader<String>(this) {
+                // Create member field for the queryType
+                private String mQueryType;
+                @Override
+                protected void onStartLoading() {
+                    super.onStartLoading();
+                    Log.d("AsyncTaskLoader", "onStartLoading was called!");
+                    // We've already checked that this key exists in args before this point,
+                    //  so there's no need to check again
+                    this.mQueryType = args.getString(MainActivity.LOADER_BUNDLE_KEY);
+                    this.forceLoad();
+                }
+
+                @Override
+                public String loadInBackground() {
+                    Log.d("AsyncTaskLoader", "loadInBackground was called!");
+                    return mMovieDbHelper.fetchApiData(this.mQueryType);
+                }
+            };
+        } else {
+            Log.d("onCreateLoader", "Missing something! " + String.valueOf(id) + " - " + args.containsKey(MainActivity.LOADER_BUNDLE_KEY));
+            return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader loader, String data) {
+        Log.d("MainActivity", "onLoadFinished was called!");
+        mApiStringData = data;
+        mWaitingForData = false;
+        this.testDataReceived();
+    }
+
+    // Nothing special with this one, but it's a required implementation
+    @Override
+    public void onLoaderReset(Loader loader) {
+    }
+
+    private void testDataReceived() {
+        Log.d("MainActivity", "testDataReceived was called!");
+        Toast.makeText(this, "API result: " + mApiStringData, Toast.LENGTH_LONG).show();
     }
 
     // Found on stack overflow, this is a way to apply a decoration to the recyclerview

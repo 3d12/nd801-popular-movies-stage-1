@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.example.ne.popularmoviesstage1.R;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,10 +19,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * Created by ne on 5/18/18.
@@ -109,13 +113,24 @@ public class MovieDbHelper {
         //  since I'm still very new to Java Streams and Readers
         StringBuilder builder = new StringBuilder("");
         try {
+            Log.w("MovieDbHelper", "Query Uri: " + this.assembleQueryUri(queryType).toString());
             URL newUrl = new URL(this.assembleQueryUri(queryType).toString());
-            URLConnection connection = newUrl.openConnection();
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            HttpsURLConnection httpsURLConnection = (HttpsURLConnection) newUrl.openConnection();
+            Log.w("MovieDbHelper", "Connection opened!");
+            InputStream inputStream = httpsURLConnection.getInputStream();
+            Log.w("MovieDbHelper", "InputStream created!");
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            Log.w("MovieDbHelper", "InputStreamReader created!");
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            Log.w("MovieDbHelper", "BufferedReader created!");
             String line;
             while ((line = bufferedReader.readLine()) != null) {
+                Log.w("MovieDbHelper", "Reading line from bufferedReader");
                 builder.append(line);
             }
+            bufferedReader.close();
+            httpsURLConnection.disconnect();
+            Log.w("MovieDbHelper", "Done Reading!");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
