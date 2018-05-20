@@ -112,30 +112,48 @@ public class MovieDbHelper {
         //  properly with the URLConnection returned from the URL,
         //  since I'm still very new to Java Streams and Readers
         StringBuilder builder = new StringBuilder("");
+        HttpsURLConnection httpsURLConnection = null;
         try {
-            Log.w("MovieDbHelper", "Query Uri: " + this.assembleQueryUri(queryType).toString());
+            // Build a new URL object from the Uri string
             URL newUrl = new URL(this.assembleQueryUri(queryType).toString());
-            HttpsURLConnection httpsURLConnection = (HttpsURLConnection) newUrl.openConnection();
-            Log.w("MovieDbHelper", "Connection opened!");
+            // Open a connection to the URL
+            httpsURLConnection = (HttpsURLConnection) newUrl.openConnection();
+            // Fetch an InputStream from the connection to read from
             InputStream inputStream = httpsURLConnection.getInputStream();
-            Log.w("MovieDbHelper", "InputStream created!");
+            // Create an InputStreamReader, this (I think) handles the reading
+            //  of lines and strings from the stream, rather than characters
+            //  or bytes/byteArrays
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            Log.w("MovieDbHelper", "InputStreamReader created!");
+            // Create a BufferedReader, which maybe actually handles the reading
+            //  of lines from the stream, I'm not really sure what the difference
+            //  between a BufferedReader and the InputStreamReader is
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            Log.w("MovieDbHelper", "BufferedReader created!");
+            // Placeholder local String field to hold the current line when reading
             String line;
+            // The inner part of this while evaluation is the assignment, which
+            //  still kind of blows me away that Java allows (assignment within
+            //  a boolean evaluation, I mean)
             while ((line = bufferedReader.readLine()) != null) {
-                Log.w("MovieDbHelper", "Reading line from bufferedReader");
+                // Appending the line to the end of the StringBuilder
                 builder.append(line);
             }
+            // Must make sure to close this reader -- this isn't in the finally
+            //  statement because if opening or reading from the BufferedReader
+            //  throws an error, the BufferedReader should be caught by
+            //  garbage collection, since it's only a local field
             bufferedReader.close();
-            httpsURLConnection.disconnect();
-            Log.w("MovieDbHelper", "Done Reading!");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            // Checking to make sure it's not null, since invoking this
+            //  while it is will throw an error itself
+            if (httpsURLConnection != null) {
+                httpsURLConnection.disconnect();
+            }
         }
+        // Return the concatenated results of all the lines in the InputStream
         return builder.toString();
     }
 

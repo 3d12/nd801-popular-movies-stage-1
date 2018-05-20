@@ -145,65 +145,87 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         startActivity(intentToStart);
     }
 
+    // This is one of the Loader Callbacks, this is called when a loader is
+    //  invoked, and the provided id is passed along with the Bundle args
     @Override
     public Loader<String> onCreateLoader(int id, final Bundle args) {
-        Log.d("MainActivity", "onCreateLoader was called!");
         if (id == MainActivity.LOADER_TASK_ID && args.containsKey(MainActivity.LOADER_BUNDLE_KEY)) {
-            Log.d("onCreateLoader", "Success! " + String.valueOf(id) + " - " + args.containsKey(MainActivity.LOADER_BUNDLE_KEY));
             return new android.content.AsyncTaskLoader<String>(this) {
                 // Create member field for the queryType
                 private String mQueryType;
+
+                // This is where we can put any "setup," for example checking
+                //  to see if we've already cached data and stopping the
+                //  network call, or instantiating member variables
                 @Override
                 protected void onStartLoading() {
                     super.onStartLoading();
-                    Log.d("AsyncTaskLoader", "onStartLoading was called!");
                     // We've already checked that this key exists in args before this point,
                     //  so there's no need to check again
                     this.mQueryType = args.getString(MainActivity.LOADER_BUNDLE_KEY);
+                    // This is required to start loadInBackground(), I think
                     this.forceLoad();
                 }
 
+                // Here's the "payload," this is what's done in the background
                 @Override
                 public String loadInBackground() {
-                    Log.d("AsyncTaskLoader", "loadInBackground was called!");
+                    // Here's the network call, this has to be done off the main thread
                     return mMovieDbHelper.fetchApiData(this.mQueryType);
                 }
             };
         } else {
-            Log.d("onCreateLoader", "Missing something! " + String.valueOf(id) + " - " + args.containsKey(MainActivity.LOADER_BUNDLE_KEY));
+            // Rather than throw an error, we would rather return a null Loader,
+            //  since I don't think that will break the Loader structure
             return null;
         }
     }
 
+    // Required implementation from LoaderCallbacks, this is called
+    //  by the loader after loadInBackground finishes
     @Override
     public void onLoadFinished(Loader loader, String data) {
-        Log.d("MainActivity", "onLoadFinished was called!");
+        // Store the data in a member variable
         mApiStringData = data;
-        mWaitingForData = false;
-        this.testDataReceived();
+        // Trigger relevant actions to occur upon finishing
+        // this.testDataReceived();
     }
+
+    // Test function to tell me that the loader finished loading,
+    //  and confirm that the API returned data, telling me that
+    //  I built and queried the Uri properly
+    // Removed now because I'm doing a debug cleanup pass
+    //private void testDataReceived() {
+        //Toast.makeText(this, "API Data: " + mApiStringData, Toast.LENGTH_LONG).show();
+    //}
 
     // Nothing special with this one, but it's a required implementation
+    //  so we'll just leave it blank
     @Override
     public void onLoaderReset(Loader loader) {
-    }
-
-    private void testDataReceived() {
-        Log.d("MainActivity", "testDataReceived was called!");
-        Toast.makeText(this, "API result: " + mApiStringData, Toast.LENGTH_LONG).show();
     }
 
     // Found on stack overflow, this is a way to apply a decoration to the recyclerview
     //  and space out the columns. Adapted to suit my purpose.
     class CustomColumnAdapter extends RecyclerView.ItemDecoration {
+        // Member variable to store value passed to the constructor
         private int space;
 
+        // Constructor, accepts an integer representing dp(?)
         public CustomColumnAdapter(int space) {
+            // Setting member variable
             this.space = space;
         }
 
+        // Overridden from RecyclerView.ItemDecoration, apparently
+        //  the outRect is the grid portion (perhaps the "parent"
+        //  of the view?) of the RecyclerView and this gets called
+        //  for each Rect that's created, to fetch these properties
+        //  when creating it in the UI
         @Override
         public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            // These are standard public fields of a Rect, which we can override
+            //  with the value passed to the constructor
             outRect.left = space;
             outRect.right = space;
             outRect.bottom = space;
