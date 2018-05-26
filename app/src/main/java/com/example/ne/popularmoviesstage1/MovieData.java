@@ -7,7 +7,7 @@ import android.os.Parcelable;
  * Created by ne on 5/6/18.
  */
 
-class MovieData implements Parcelable {
+public class MovieData implements Parcelable {
     final String mTitle;
     final String mImageLink;
     final String mSynopsis;

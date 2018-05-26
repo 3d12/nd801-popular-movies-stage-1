@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements RecyclerView.OnClickListener,LoaderManager.LoaderCallbacks<String> {
+public class MainActivity extends AppCompatActivity implements RecyclerView.OnClickListener,LoaderManager.LoaderCallbacks<List> {
 
     // Stuff that's required for the ASyncTaskLoader
     private static final int LOADER_TASK_ID = 12;
     private static final String LOADER_BUNDLE_KEY = "queryType";
-    private String mApiStringData;
+    private List<MovieData> mCachedMovieDataList;
     private boolean mWaitingForData = true;
 
     // Activity-wide reference to the MovieDbHelper that will be fetching the data
@@ -50,12 +50,6 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         // Instantiate new custom adapter
         mMoviesAdapter = new MoviesAdapter(this, this);
 
-        // Create some dummy data for testing custom adapter
-        List<MovieData> testData = createDummyData();
-
-        // Provide new adapter with data
-        mMoviesAdapter.updateDataList(testData);
-
         // Set adapter on RecyclerView
         mMoviesRecyclerView.setAdapter(mMoviesAdapter);
 
@@ -77,44 +71,8 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
 
         LoaderManager loaderManager = getLoaderManager();
         Bundle newBundle = new Bundle();
-        newBundle.putString(MainActivity.LOADER_BUNDLE_KEY, MovieDbHelper.ENDPOINT_POPULAR);
+        newBundle.putString(MainActivity.LOADER_BUNDLE_KEY, MovieDbHelper.ENDPOINT_TOP_RATED);
         loaderManager.initLoader(MainActivity.LOADER_TASK_ID, newBundle, this);
-
-    }
-
-    // Whipped up a quick method to populate a List<MovieData>
-    //  for testing that I got the adapter correct at this stage
-    private List<MovieData> createDummyData() {
-        ArrayList<MovieData> returnArray = new ArrayList<>();
-        returnArray.add(new MovieData("Test1", "https://www.funtimepartyhire.com.au/wp-content/uploads/2017/11/hot-dog-06.jpg", null, null, null));
-        returnArray.add(new MovieData("Test2", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test3", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test4", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test5", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test6", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test7", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test8", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test9", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test10", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test11", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test12", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test13", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test14", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test15", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test16", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test17", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test18", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test19", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test20", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test21", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test22", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test23", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test24", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test25", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test26", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test27", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        returnArray.add(new MovieData("Test28", "http://i.imgur.com/RgbcXVv.png", null, null, null));
-        return returnArray;
     }
 
     // We override onClick here because we want to handle the clicked item in MainActivity.
@@ -148,9 +106,9 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
     // This is one of the Loader Callbacks, this is called when a loader is
     //  invoked, and the provided id is passed along with the Bundle args
     @Override
-    public Loader<String> onCreateLoader(int id, final Bundle args) {
+    public Loader<List> onCreateLoader(int id, final Bundle args) {
         if (id == MainActivity.LOADER_TASK_ID && args.containsKey(MainActivity.LOADER_BUNDLE_KEY)) {
-            return new android.content.AsyncTaskLoader<String>(this) {
+            return new android.content.AsyncTaskLoader<List>(this) {
                 // Create member field for the queryType
                 private String mQueryType;
 
@@ -169,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
 
                 // Here's the "payload," this is what's done in the background
                 @Override
-                public String loadInBackground() {
+                public List loadInBackground() {
                     // Here's the network call, this has to be done off the main thread
                     return mMovieDbHelper.fetchApiData(this.mQueryType);
                 }
@@ -184,11 +142,23 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
     // Required implementation from LoaderCallbacks, this is called
     //  by the loader after loadInBackground finishes
     @Override
-    public void onLoadFinished(Loader loader, String data) {
+    public void onLoadFinished(Loader loader, List data) {
+        // Apparently, because there's no way to ensure at runtime
+        //  that the List we receive here will contain all instances
+        //  of a specific object type before assigning it, we
+        //  need to iterate over it and take only the members that
+        //  match to the type of object we're expecting so we can
+        //  cast without worrying about potential runtime errors
+        ArrayList<MovieData> approvedList = new ArrayList<MovieData>();
+        for (Object testData : data) {
+            if (testData instanceof MovieData) {
+                approvedList.add((MovieData) testData);
+            }
+        }
         // Store the data in a member variable
-        mApiStringData = data;
-        // Trigger relevant actions to occur upon finishing
-        // this.testDataReceived();
+        this.mCachedMovieDataList = approvedList;
+        // Kick off other "triggered" actions from this event
+        this.mMoviesAdapter.updateDataList(this.mCachedMovieDataList);
     }
 
     // Test function to tell me that the loader finished loading,

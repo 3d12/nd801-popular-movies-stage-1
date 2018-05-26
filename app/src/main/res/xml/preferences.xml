@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- We need to define these preferences using a PreferenceScreen to contain
+        the individual preferences, and defining a layout attribute
+        that defines how to display the preferences in this screen. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- We only need one preference for this exercise, that's a ListPreference.
+            Realistically, since I only need a binary menu option, this could
+            just as easily be a CheckboxPreference or whatever, but I wanted
+            to get some practice with ListPreference, as I remember those being
+            a little trickier to implement. -->
+    <ListPreference android:key="@string/pref_sort_order_key"
+        android:title="@string/pref_sort_order_title"
+        android:dialogTitle="@string/pref_sort_order_title"
+        android:entries="@array/pref_sort_order_entries"
+        android:entryValues="@array/pref_sort_order_entry_values"
+        android:defaultValue="@string/pref_sort_order_popular_value" />
+</PreferenceScreen>

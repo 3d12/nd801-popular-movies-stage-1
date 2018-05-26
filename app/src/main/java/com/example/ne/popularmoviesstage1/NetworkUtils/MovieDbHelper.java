@@ -5,11 +5,17 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import com.example.ne.popularmoviesstage1.MovieData;
 import com.example.ne.popularmoviesstage1.R;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -24,6 +30,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -49,6 +58,18 @@ public class MovieDbHelper {
     public static final String ENDPOINT_POPULAR = "popular";
     public static final String ENDPOINT_TOP_RATED = "top_rated";
 
+    private static final String BASE_MOVIEDB_IMAGE_URL = "http://image.tmdb.org";
+    private static final String ENDPOINT_IMAGE_API_1 = "t";
+    private static final String ENDPOINT_IMAGE_API_2 = "p";
+    private static final String ENDPOINT_IMAGE_API_SIZE = "w185";
+
+    // Constants for navigating the JSON object mapping
+    private static final String JSON_POSTER_PATH_KEY = "poster_path";
+    private static final String JSON_TITLE_KEY = "title";
+    private static final String JSON_SYNOPSIS_KEY = "overview";
+    private static final String JSON_RELEASE_DATE_KEY = "release_date";
+    private static final String JSON_RATING_KEY = "vote_average";
+
     // Class constructor, takes a context which is
     //  used to fetch the ApiKey from resources
     public MovieDbHelper(@NonNull Context context) {
@@ -71,7 +92,32 @@ public class MovieDbHelper {
         return builder.build();
     }
 
-    // Static method to construct a URI for querying
+    // Static method to construct the base image URI for querying
+    private static Uri assembleImageUri() {
+        // Create a builder by parsing the base URL
+        Uri.Builder builder = Uri.parse(BASE_MOVIEDB_IMAGE_URL).buildUpon();
+        // Add the API components to the path
+        builder.appendPath(ENDPOINT_IMAGE_API_1);
+        builder.appendPath(ENDPOINT_IMAGE_API_2);
+        builder.appendPath(ENDPOINT_IMAGE_API_SIZE);
+        // Build and return the built Uri object
+        return builder.build();
+    }
+
+    // Static method to construct a Uri pointing directly to
+    //  a poster image
+    private static Uri constructImageUri(String posterPath) {
+        // Strip the leading forward-slash "/" out of the posterPath
+        String fixedPosterPath = posterPath.replace("/", "");
+        // Create a builder from the base Uri
+        Uri.Builder builder = MovieDbHelper.assembleImageUri().buildUpon();
+        // Add the fixed posterPath to the end, which includes the file extension
+        builder.appendPath(fixedPosterPath);
+        // Build and return the built Uri object
+        return builder.build();
+    }
+
+    // Instance method to construct a URI for querying
     //  based on a string passed and append the api_key
     //  k/v pair to the URI
     private Uri assembleQueryUri(String queryType) {
@@ -99,8 +145,8 @@ public class MovieDbHelper {
     }
 
     // Query for a specific set of data, and return
-    //  that JSON data as a String for now, to test
-    public String fetchApiData(String queryType) {
+    //  that JSON data as a List of MovieData objects
+    public List<MovieData> fetchApiData(String queryType) {
         // There is no option when null is passed, so rather
         //  than return bad data, we will instead return
         //  exactly what was passed
@@ -153,15 +199,113 @@ public class MovieDbHelper {
                 httpsURLConnection.disconnect();
             }
         }
-        // Return the concatenated results of all the lines in the InputStream
-        return builder.toString();
+
+        // Instantiate an empty ArrayList that we can return
+        ArrayList<MovieData> returnList = new ArrayList<MovieData>();
+        // Honestly, I built the method that would handle this
+        //  before I realized I would really only be using it
+        //  once during each parse. Oh well.
+        JSONArray resultsJSONArray = this.parseDataIntoJSON(builder.toString());
+        // Kinda disappointed that there isn't a better way
+        //   to iterate over a JSONArray -- at least, not
+        //   one that I found in my admittedly brief time
+        //   searching for one
+        for (int i=0; i<resultsJSONArray.length(); i++) {
+            // Have to check for JSONException from resultsJSONArray.get()
+            try {
+                // Retrieve object
+                Object testObject = resultsJSONArray.get(i);
+                // Test the contents
+                if (testObject instanceof JSONObject) {
+                    // If it's passable, pass it to parseMovieData and add that
+                    //  to the results
+                    returnList.add(this.parseMovieData((JSONObject) testObject));
+                } else {
+                    // Otherwise we'll just null-fill that spot since
+                    //  we'll be stripping those out before this data
+                    //  hits the RecyclerView anyway
+                    returnList.add(null);
+                }
+            } catch (JSONException e) {
+                // Again, going to null this out if an error occurs, since
+                //  the nulls should only ever appear in some sort of debug
+                //  display, if at all
+                e.printStackTrace();
+                returnList.add(null);
+            }
+        }
+        // Return our populated list
+        return returnList;
     }
 
-    // Static method to fetch the apikey from a
+    // Instance method to fetch the apikey from a
     //  resource file that's hidden from git
     //  (res/values/apikey.xml)
     private String getApiKey() {
         return mContext.getResources().getString(R.string.api_key);
+    }
+
+    // Instance method to parse the JSONObject structure out of
+    //  the String that's passed
+    private JSONArray parseDataIntoJSON(String data) {
+        JSONArray resultsParse = null;
+        try {
+            JSONObject firstParse = new JSONObject(data);
+            if (firstParse.has("results")) {
+                Object testObject = firstParse.get("results");
+                if (testObject instanceof JSONArray) {
+                    resultsParse = (JSONArray) firstParse.get("results");
+                } else {
+                    return resultsParse;
+                }
+            } else {
+                return resultsParse;
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return resultsParse;
+    }
+
+    // Instance method to parse a MovieData object out of
+    //  the JSONObject that's passed
+    private MovieData parseMovieData(JSONObject inJSON) {
+        // Create local fields for the components of a MovieData object
+        String poster = null;
+        String title = null;
+        String synopsis = null;
+        String releaseDate = null;
+        String rating = null;
+
+        // One-by-one, check the incoming JSON object for the
+        //  presence of each key, and assign the value to the
+        //  corresponding field
+        try {
+            if (inJSON.has(JSON_POSTER_PATH_KEY)) {
+                poster = inJSON.getString(JSON_POSTER_PATH_KEY);
+            }
+            if (inJSON.has(JSON_TITLE_KEY)) {
+                title = inJSON.getString(JSON_TITLE_KEY);
+            }
+            if (inJSON.has(JSON_SYNOPSIS_KEY)) {
+                synopsis = inJSON.getString(JSON_SYNOPSIS_KEY);
+            }
+            if (inJSON.has(JSON_RELEASE_DATE_KEY)) {
+                releaseDate = inJSON.getString(JSON_RELEASE_DATE_KEY);
+            }
+            if (inJSON.has(JSON_RATING_KEY)) {
+                rating = inJSON.getString(JSON_RATING_KEY) + " / 10";
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return new MovieData(title,
+                MovieDbHelper.constructImageUri(poster).toString(),
+                synopsis,
+                rating,
+                releaseDate);
     }
 
 }
