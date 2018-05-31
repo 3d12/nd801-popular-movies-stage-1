@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This is again an instance of using a fragment as the root view for
+        the XML of an activity. When I tried putting this in a LinearLayout
+        I kept getting a java.lang.IllegalStateException: Must specify
+        preferenceTheme in theme, so I went with this setup instead and
+        it seems to work so far. Full disclosure, not 100% on why that
+        is. -->
+<fragment
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:name="com.example.ne.popularmoviesstage1.SettingsFragment"
+    android:id="@+id/fragment_settings"
+    xmlns:android="http://schemas.android.com/apk/res/android" />

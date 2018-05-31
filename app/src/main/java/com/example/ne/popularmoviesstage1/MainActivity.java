@@ -3,15 +3,22 @@ package com.example.ne.popularmoviesstage1;
 import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.graphics.Rect;
 import android.icu.text.LocaleDisplayNames;
 import android.os.AsyncTask;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.preference.PreferenceManager;
+import android.support.v7.preference.PreferenceScreen;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -21,13 +28,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements RecyclerView.OnClickListener,LoaderManager.LoaderCallbacks<List> {
+public class MainActivity extends AppCompatActivity implements RecyclerView.OnClickListener,LoaderManager.LoaderCallbacks<List>,SharedPreferences.OnSharedPreferenceChangeListener {
 
     // Stuff that's required for the ASyncTaskLoader
     private static final int LOADER_TASK_ID = 12;
     private static final String LOADER_BUNDLE_KEY = "queryType";
     private List<MovieData> mCachedMovieDataList;
-    private boolean mWaitingForData = true;
 
     // Activity-wide reference to the MovieDbHelper that will be fetching the data
     MovieDbHelper mMovieDbHelper;
@@ -69,9 +75,17 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         // Testing for appropriate implementation of MovieDbHelper to return API data
         mMovieDbHelper = new MovieDbHelper(this);
 
-        LoaderManager loaderManager = getLoaderManager();
+        // Get a reference to the LoaderManager
+        LoaderManager loaderManager = this.getLoaderManager();
+        // Create a new bundle to pass into the loader
         Bundle newBundle = new Bundle();
-        newBundle.putString(MainActivity.LOADER_BUNDLE_KEY, MovieDbHelper.ENDPOINT_TOP_RATED);
+        // Retrieve a reference to the default Shared Preferences
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        // Use that reference to retrieve the string of the value of the selected option, or use popular by default
+        String endpointPreference = sharedPreferences.getString(getString(R.string.pref_sort_order_key), MovieDbHelper.ENDPOINT_POPULAR);
+        // Put whatever value was returned from getString() into the bundle to be passed to the Loader
+        newBundle.putString(MainActivity.LOADER_BUNDLE_KEY, endpointPreference);
+        // Init the loader with the newly-created bundle
         loaderManager.initLoader(MainActivity.LOADER_TASK_ID, newBundle, this);
     }
 
@@ -161,18 +175,65 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         this.mMoviesAdapter.updateDataList(this.mCachedMovieDataList);
     }
 
-    // Test function to tell me that the loader finished loading,
-    //  and confirm that the API returned data, telling me that
-    //  I built and queried the Uri properly
-    // Removed now because I'm doing a debug cleanup pass
-    //private void testDataReceived() {
-        //Toast.makeText(this, "API Data: " + mApiStringData, Toast.LENGTH_LONG).show();
-    //}
-
     // Nothing special with this one, but it's a required implementation
     //  so we'll just leave it blank
     @Override
     public void onLoaderReset(Loader loader) {
+    }
+
+    // This is the "trigger" called by the shared preferences change, which
+    //  causes the Loader to restart with the new parameter and loads that
+    //  data into the RecyclerView
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        // Validate that the value changed is the one we expect
+        if (key.equals(getString(R.string.pref_sort_order_key))) {
+            // Use the passed reference to SharedPreferences and the provided key
+            //  to determine the changed value to provide to the Loader
+            String changedPrefValue = sharedPreferences.getString(key, MovieDbHelper.ENDPOINT_POPULAR);
+
+            // Bundle the newly-changed value and pass it to the loader to restart it
+            Bundle newBundle = new Bundle();
+            newBundle.putString(MainActivity.LOADER_BUNDLE_KEY, changedPrefValue);
+            this.getLoaderManager().restartLoader(MainActivity.LOADER_TASK_ID, newBundle, this);
+        }
+    }
+
+    // This is the override to implement a custom menu into the activity from XML
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Retrieve a reference to the MenuInflater by context
+        MenuInflater menuInflater = this.getMenuInflater();
+        // Use the MenuInflater to inflate the menu from XML
+        menuInflater.inflate(R.menu.menu_main, menu);
+        // Return true to signal the menu has been successfully overridden
+        return true;
+    }
+
+    // This is the override to implement actions to tie to the menu button
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Retrieve the ID of the clicked MenuItem
+        int itemId = item.getItemId();
+        // Compare to the ID of the menu button in the menu XML
+        if (itemId == R.id.menubtn_settings) {
+            // Create explicit intent for SettingsActivity
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            // Check to make sure we can handle this activity
+            // Note, this is pretty redundant when using an explicit intent for
+            //  an activity that's part of my own app, but I wanted to make sure
+            //  to get into the habit of doing this since it's probably a best
+            //  practice
+            if (settingsIntent.resolveActivity(this.getPackageManager()) != null) {
+                // If so, start the activity
+                startActivity(settingsIntent);
+            }
+            // Regardless, signal that the action has been handled
+            return true;
+        } else {
+            // Otherwise, let the super class handle the selected item
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     // Found on stack overflow, this is a way to apply a decoration to the recyclerview
@@ -182,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
         private int space;
 
         // Constructor, accepts an integer representing dp(?)
-        public CustomColumnAdapter(int space) {
+        CustomColumnAdapter(int space) {
             // Setting member variable
             this.space = space;
         }

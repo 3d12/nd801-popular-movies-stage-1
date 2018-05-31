@@ -23,6 +23,10 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     compile 'com.android.support:recyclerview-v7:26.1.0'
+    // Hopefully the use of this library won't be held against me, I ran into a bug
+    //  that's outlined at https://stackoverflow.com/questions/32070670/preferencefragmentcompat-requires-preferencetheme-to-be-set
+    //  that prevented me from using the com.android.support version of this library
+    compile 'com.takisoft.fix:preference-v7:27.1.1.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

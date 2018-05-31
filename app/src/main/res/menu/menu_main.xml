@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pretty standard menu setup, we're only setting up a menu with one
+        item that we can bind to the MainActivity. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- Here's the button for the preferences activity, instead of
+            using the onClick attribute here in the XML, we're using
+            an implementation of an OnClickListener in MainActivity
+            to listen for this button's ID. -->
+    <item android:id="@+id/menubtn_settings"
+        app:showAsAction="never"
+        android:orderInCategory="100"
+        android:title="@string/pref_menubutton_title"/>
+</menu>
