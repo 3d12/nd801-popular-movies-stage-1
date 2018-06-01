@@ -5,8 +5,9 @@
     <!-- This permission is required for the Picasso library to be
             able to find the images from the internet! -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- This permission is apparently used for AsyncTask to be
-            able to lookup hostnames? -->
+    <!-- This permission is actually used to allow us to query the
+            status of the network connections via the
+            ConnectivityManager service. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application

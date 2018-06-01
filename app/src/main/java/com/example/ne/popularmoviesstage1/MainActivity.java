@@ -1,21 +1,18 @@
 package com.example.ne.popularmoviesstage1;
 
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
-import android.icu.text.LocaleDisplayNames;
-import android.os.AsyncTask;
-import android.support.v4.content.AsyncTaskLoader;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.preference.PreferenceManager;
-import android.support.v7.preference.PreferenceScreen;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,7 +21,6 @@ import android.widget.Toast;
 
 import com.example.ne.popularmoviesstage1.NetworkUtils.MovieDbHelper;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,14 +32,14 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
     private List<MovieData> mCachedMovieDataList;
 
     // Activity-wide reference to the MovieDbHelper that will be fetching the data
-    MovieDbHelper mMovieDbHelper;
+    private MovieDbHelper mMovieDbHelper;
 
     // Activity-wide reference to the RecyclerView
-    RecyclerView mMoviesRecyclerView;
+    private RecyclerView mMoviesRecyclerView;
 
     // Activity-wide reference to the adapter for
     //  the RecyclerView
-    MoviesAdapter mMoviesAdapter;
+    private MoviesAdapter mMoviesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,6 +138,21 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
                 // Here's the "payload," this is what's done in the background
                 @Override
                 public List loadInBackground() {
+                    // First we must ensure we have a network connected from which we
+                    //  can retrieve this data (found from a very helpful post on stack
+                    //  overflow)
+                    NetworkInfo networkInfo = null;
+                    try {
+                        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                        networkInfo = connectivityManager.getActiveNetworkInfo();
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+
+                    if (networkInfo == null || !networkInfo.isConnected()) {
+                        return null;
+                    }
                     // Here's the network call, this has to be done off the main thread
                     return mMovieDbHelper.fetchApiData(this.mQueryType);
                 }
@@ -157,6 +168,14 @@ public class MainActivity extends AppCompatActivity implements RecyclerView.OnCl
     //  by the loader after loadInBackground finishes
     @Override
     public void onLoadFinished(Loader loader, List data) {
+        // Because we have a condition that might return a null object
+        //  reference as the List returned from the AsyncTask,
+        //  we first need to check for that here before operating
+        //  on it.
+        if (data == null) {
+            Toast.makeText(this, "Unable to fetch data from the API, please try again later", Toast.LENGTH_LONG).show();
+            return;
+        }
         // Apparently, because there's no way to ensure at runtime
         //  that the List we receive here will contain all instances
         //  of a specific object type before assigning it, we

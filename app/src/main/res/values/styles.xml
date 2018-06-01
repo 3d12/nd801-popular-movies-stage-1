@@ -9,4 +9,22 @@
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
+    <!-- Detail Activity Themes -->
+    <!-- This one is for the headers on that screen (except title,
+            which is a unique layout with bigger text size so it
+            does not use a style) -->
+    <style name="DetailHeaderTheme" parent="AppTheme">
+        <item name="android:textSize">@dimen/MovieTextLarge</item>
+        <item name="android:layout_marginTop">@dimen/MovieSpacing</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+
+    <!-- This one is for the smaller text fields below the headers -->
+    <style name="DetailTextTheme" parent="AppTheme">
+        <item name="android:layout_marginTop">@dimen/MovieSpacingSmall</item>
+        <item name="android:textSize">@dimen/MovieTextMedium</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+    </style>
+
 </resources>

@@ -1,15 +1,10 @@
 package com.example.ne.popularmoviesstage1.NetworkUtils;
 
-import android.app.Application;
 import android.content.Context;
-import android.content.res.AssetManager;
-import android.content.res.Resources;
 import android.net.Uri;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
 
+import com.example.ne.popularmoviesstage1.BuildConfig;
 import com.example.ne.popularmoviesstage1.MovieData;
 import com.example.ne.popularmoviesstage1.R;
 
@@ -17,21 +12,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -239,10 +226,12 @@ public class MovieDbHelper {
     }
 
     // Instance method to fetch the apikey from a
-    //  resource file that's hidden from git
-    //  (res/values/apikey.xml)
+    //  BuildConfig value, which is a better practice
+    //  than an ignored XML values resource file.
+    //  Seems to work OK, not sure why this concept
+    //  was so confusing to me before.
     private String getApiKey() {
-        return mContext.getResources().getString(R.string.api_key);
+        return BuildConfig.api_key;
     }
 
     // Instance method to parse the JSONObject structure out of
